@@ -1,15 +1,4 @@
 #!/usr/bin/env python
-# This first line allows you to run it like ./frag.py
-# Otherwise you have to run it like python frag.py in the terminal
-
-# sudo apt-get install ipython
-
-# change permissions with command
-# chmod +x script.py
-
-# For help, visit http://docs.scipy.org/doc/numpy/reference/
-
-# access command line : ipython
 
 import numpy as np
 import matplotlib.pyplot as plt
