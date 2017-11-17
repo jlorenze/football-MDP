@@ -4,20 +4,49 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.linalg as scl
 
-def T(n,m,N,p,c):
+def T(n,m,N,A,p):
     # ReadMe
-    # INPUTS
-        # n is the number of rows in our grid
-        # m is the number of columns in our grid
-        # N is the number of players on the field
-        # p is between 0 and 1 and is the probability that the defender takes his
-        # "best" action. He takes the other 4 actions with equal probability.
-        # c < 1 is the parameter that makes the defender favor horizontal movement
-        # to get between the running back and the goal
-    # OUTPUTS
-        # A matrix, of size (n*m)^N by 5 by (n,m)^N
+        # functionality
+            # Right now, the number of actions A is 5.
+            # Action 0 is remain in the same place.
+            # Action 1 is go up (reduce y coordinate by 1)
+            # Action 2 is go down (increase y coordinate by 1)
+            # Action 3 is go left (decrease x coordinate by 1)
+            # Action 4 is go right (increase x coordinate by 1)
+        # INPUTS
+            # n is the number of rows in our grid
+            # m is the number of columns in our grid
+            # N is the number of players on the field
+            # A is the total number of actions possible for a single player.
+            # p is a vector of size N whose entries are all in [0,1] which specify how noisy each of the players' transitions are.
+                # for example, if player i chooses to go up, then with probability p[i] he will go up. He takes all other actions with equal probability.
+        # OUTPUTS
+            # A matrix, of size (n*m)^N by A^N by A^N by 2
+                # the first 2 indices indicate state and actions.
+                # The last 2 indices indicate possible future states and their probabilities
 
-    return 0
+    L = n*m # number of locations on the field.
+
+    T = np.zeros(((n*m)**N, A**N, A**N, 2))
+
+    for s in range(L**N): # loop over all states
+        pos = state2pos(s,n,m,N)
+        for a in range(A**N): # loop over all actions
+            acts = vec2act(a,A,N)
+            for i in range(A**N): # loop over all possible realizations of the randomness
+                mov = vec2act(i,A,N)
+                t = 1 # initialize the probability of this realization to 1
+                for j in range(N):
+                    if (mov[j] != acts[j]):
+                        t = t*(1-p[j])
+                    else:
+                        t = t*p[j]
+                new_pos,bounds = mov2pos(mov,pos,n,m)
+                sp = pos2state(new_pos,n,m,N)
+                T[s,a,i,0] = sp # record a possible state to transition to
+                T[s,a,i,1] = t # record the probability of landing in this state
+
+    return T
 
 
 def state2pos(s,n,m,N):
@@ -67,6 +96,99 @@ def pos2state(pos,n,m,N):
         s = s + mat2vec(pos[i,0], pos[i,1], n,m)*(L**i) # add player i's position information to the state
     return s
 
+def act2vec(acts,A):
+    #ReadMe
+        # functionality
+            # takes the N actions of a player and converts it into a single action for the transition model T
+            # Indices are ZERO indexed
+        # INPUTS
+            # acts is a list of N actions, one for each player. Has shape N by 1.
+            # A is the total number of unique actions for each player.
+        # OUTPUTS
+            # a, which is a vectorized version of acts.
+
+    N = acts.shape[0] # determine the total number of players.
+
+    a = 0; #initialize the action
+    for i in range(N):
+        a = a + acts[i]*A**i # include the ith player's action information into a
+
+    return a
+
+def vec2act(a,A,N):
+    #ReadMe
+        # functionality
+            # takes the compact MDP encoding of a set of actions and converts it into N actions, one for each player.
+            # Indices are ZERO indexed
+        # INPUTS
+            # a describes the actions of all players. It is an integer, in the MDP format.
+            # A is the total number of unique actions for each player.
+            # N is the number of players in the game.
+        # OUTPUTS
+            # acts, which is a N length vector specifying the actions of each of the players.
+
+    acts = np.zeros((N,)) # initialize the actions to output
+
+    for i in range(N):
+        acts[i] = np.mod(a, A) # extract the ith player's action
+        a = a - acts[i] # remove the ith player's information from a so it will not interfere with later loop iterations
+        a = a/A
+
+    return acts
+
+def mov2pos(mov,pos, n,m):
+    #ReadMe
+        # Given a set of movements, and a current set of positions, calculate the new positions of the N players.
+    # INPUTS
+        # mov is a vector of length N, which holds the displacement directions for all N players.
+        # pos is a N by 2 matrix, where each row holds the xy coordinates of a player.
+    # OUTPUTS
+        # new_pos is the new position after the movement specified by mov is applied
+        # bounds is a vector of length N, specifying if any of the players stepped out of bounds.
+            # bounds[i] = 1 means the player is still in bounds after the movement, bounds[i] = 0 if the player moved out of bounds.
+
+    N = mov.shape[0] # get the number of players
+    new_pos = np.zeros((N,2))
+    bounds = np.ones((N,))
+
+    for i in range(N):
+        if (mov[i] == 0): # no movement
+            new_pos[i,0] = pos[i,0]
+            new_pos[i,1] = pos[i,1]
+        elif (mov[i] == 1): # go up
+            new_pos[i,0] = pos[i,0]
+            if (pos[i,1] > 0):
+                new_pos[i,1] = pos[i,1] - 1
+            else:
+                new_pos[i,1] = pos[i,1]
+                bounds[i] = 0
+
+        elif (mov[i] == 2): # go down
+            new_pos[i,0] = pos[i,0]
+            if (pos[i,1] < n-1):
+                new_pos[i,1] = pos[i,1] + 1
+            else:
+                new_pos[i,1] = pos[i,1]
+                bounds[i] = 0
+        elif (mov[i] == 3): # go left
+            if (pos[i,0] > 0):
+                new_pos[i,0] = pos[i,0] -1
+            else:
+                new_pos[i,0] = pos[i,0]
+                bounds[i] = 0
+            new_pos[i,1] = pos[i,1]
+        elif (mov[i] == 4):
+            if (pos[i,0] < m-1):
+                new_pos[i,0] = pos[i,0] +1
+            else:
+                new_pos[i,0] = pos[i,0]
+                bounds[i] = 0
+            new_pos[i,1] = pos[i,1]
+        else:
+            print 'ERROR: Invalid movement.'
+
+    return new_pos, bounds
+
 def vec2mat(s,n,m):
     #ReadMe
         # functionality
@@ -114,7 +236,10 @@ if __name__ == '__main__':
     # just some random junk code here to test the functionality of our utilities
     n = 5
     m = 5
-    for i in range(n):
-        for j in range(m):
-            s = mat2vec(j,i,n,m)
-            print s
+    N = 2
+    A = 5
+    p = np.zeros((2,))
+    p[0] = 0.8
+    p[1] = 0.9
+
+    T = T(n,m,N,A,p)
