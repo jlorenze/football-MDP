@@ -48,7 +48,6 @@ def T(n,m,N,A,p):
 
     return T
 
-
 def state2pos(s,n,m,N):
     #ReadMe
         # functionality
@@ -68,12 +67,13 @@ def state2pos(s,n,m,N):
 
     L = n*m # total number of locations in the grid
     for i in range(N):
-        ith_player_state = np.mod(np.mod(s, L**(i+1)), L**i) # get the piece of the state that encodes the x,y position of player i
+        ith_player_state = np.mod(s, L) # get the piece of the state that encodes the x,y position of player i
         x,y = vec2mat(ith_player_state,n,m) # convert that substate into an xy position
         pos[i,0] = x #write the position of player i into the output
         pos[i,1] = y
 
         s = s - ith_player_state # remove player i's information from the state so that it will not interfere with later indicies
+        s = s/L
 
     return pos
 
@@ -234,12 +234,13 @@ def mat2vec(x,y,n,m):
 
 if __name__ == '__main__':
     # just some random junk code here to test the functionality of our utilities
-    n = 5
-    m = 5
-    N = 2
-    A = 5
-    p = np.zeros((2,))
-    p[0] = 0.8
-    p[1] = 0.9
-
-    T = T(n,m,N,A,p)
+    pos = np.zeros((3,2))
+    pos[0,0] = 6
+    pos[0,1] = 8
+    pos[1,0] = 6
+    pos[1,1] = 1
+    pos[2,0] = 2
+    pos[2,1] = 2
+    s = pos2state(pos, 11,11,3)
+    print s
+    print state2pos(s,11,11,3)
