@@ -38,7 +38,7 @@ def T(n,m,N,A,p):
                 t = 1 # initialize the probability of this realization to 1
                 for j in range(N):
                     if (mov[j] != acts[j]):
-                        t = t*(1-p[j])
+                        t = t*(1-p[j])/float(4)
                     else:
                         t = t*p[j]
                 new_pos,bounds = mov2pos(mov,pos,n,m)
@@ -234,13 +234,22 @@ def mat2vec(x,y,n,m):
 
 if __name__ == '__main__':
     # just some random junk code here to test the functionality of our utilities
-    pos = np.zeros((3,2))
-    pos[0,0] = 6
-    pos[0,1] = 8
-    pos[1,0] = 6
-    pos[1,1] = 1
-    pos[2,0] = 2
-    pos[2,1] = 2
-    s = pos2state(pos, 11,11,3)
-    print s
-    print state2pos(s,11,11,3)
+    # pos = np.zeros((3,2))
+    # pos[0,0] = 6
+    # pos[0,1] = 8
+    # pos[1,0] = 6
+    # pos[1,1] = 1
+    # pos[2,0] = 2
+    # pos[2,1] = 2
+    # s = pos2state(pos, 11,11,3)
+    # print s
+    # print state2pos(s,11,11,3)
+
+    p = np.zeros((2,))
+    p[0] = 0.9
+    p[1] = 1
+    T = T(4,4,2,5,p)
+    # print T[19,19,:,1]
+    # print np.sum(T[19,19,:,1])
+    for i in range(25):
+        print np.sum(T[i,19,:,1])
