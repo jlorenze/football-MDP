@@ -3,6 +3,7 @@ import sys
 import pdb
 import utils
 from matplotlib import pyplot as plt
+from policies import *
 
 class game:
 	def __init__(self, n, m, N, H):
@@ -36,9 +37,13 @@ class game:
 	def action(self, s):
 		""" Returns action for each player for state s from policy pi """
 		acts = np.zeros((self.N,)) # initialize the actions
-		for i in range(self.N):
-			# Temporarily, until policy is created
-			acts[i] = 2 # go down the field (decrease y coordinate)
+		
+		acts[0] = 2
+
+		# Defenders policy
+		lookahead = 1
+		p = 1
+		acts[1] = Naive_D(s, self.n, self.m, lookahead, acts[0], p)
 
 		# Convert the vector of player actions to single value
 		a = int(utils.act2vec(acts, self.A))
@@ -95,6 +100,13 @@ class game:
 			self.endconditionmet = True
 			print 'Time Horizon met.'
 
+		# Check if the defender has captured the attacker
+		pos = utils.state2pos(self.s, self.n, self.m, self.N)
+		if all(pos[0,:] == pos[1,:]):
+			self.endconditionmet = True
+			print 'Offense was captured.'
+		
+
 	def showTrajectory(self):
 		plt.figure()
 		ax = plt.gca()
@@ -110,7 +122,7 @@ class game:
 
 
 if __name__ == '__main__':
-	n = 7 # Field length
+	n = 5 # Field length
 	m = 5 # Field width
 	N = 2 # Number of players
 	H = 10 # Time horizon
