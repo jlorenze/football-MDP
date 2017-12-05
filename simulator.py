@@ -4,6 +4,7 @@ import pdb
 import utils
 from matplotlib import pyplot as plt
 from policies import *
+from exactmethods import *
 
 class game:
 	def __init__(self, n, m, N, H):
@@ -12,9 +13,14 @@ class game:
 		self.N = N # Number of players
 		self.A = 5 # Number of actions for each player
 		self.s = 1 # Just initialize the state
-		# self.pi = policy
+		print 'Computing transition probabilities ...'
 		self.T = utils.T(n,m,N,5,[0.9,0.9]); # the transtion model
 		self.horizon = H
+
+		# Compute policy for defender
+		print 'Computing policy based on Value Iteration ...'
+		[self.pi, self.U] = finiteHorizonValueIteration(H,n,m,self.A,self.T)
+		print 'Done'
 
 	def reset(self, x0):
 		""" Resets the game to a new state with starting positions"""
@@ -22,23 +28,27 @@ class game:
 		self.R = 0
 
 		# Reset trajectory history
-		self.hist = [x0[i,:] for i in range(self.N)]
+		self.shist = [x0[i,:] for i in range(self.N)]
+		self.ahist = [np.array([]) for i in range(self.N)]
 		self.time = 0
 		self.endconditionmet = False
 
 	def run(self):
 		""" Assuming it has already been reset """
-		while not self.endconditionmet:
+		time = 0
+		while not self.endconditionmet and time < self.horizon:
 			self.update()
 			self.checkEnd()
+			time += 1
 
-		self.showTrajectory()
+		# self.showTrajectory()
 
 	def action(self, s):
 		""" Returns action for each player for state s from policy pi """
 		acts = np.zeros((self.N,)) # initialize the actions
 		
-		acts[0] = 2
+		# Attacker policy
+		acts[0] = self.pi[s]
 
 		# Defenders policy
 		lookahead = 1
@@ -72,21 +82,23 @@ class game:
 		self.time += 1
 
 		# Add the positions to the trajectory history
-		self.updateHist(sp)
+		self.updateHist(sp,a)
 
-	def updateHist(self,s):
+	def updateHist(self,s,a):
 		X = utils.state2pos(s, self.n, self.m, self.N)
+		acts = utils.vec2act(a,self.A,self.N)
 		for i in range(self.N):
 			x = np.matrix(X[i,:])
-			self.hist[i] = np.append(self.hist[i], x, axis=0)
+			self.shist[i] = np.append(self.shist[i], x, axis=0)
+			self.ahist[i] = np.append(self.ahist[i], np.array([acts[i]]), axis=0)
 
 	def checkEnd(self):
 		""" Check if one of the end conditions is satisfied, (1) 
 		Player 1 reaches the end of the grid, (2) Player 1 reaches a
 		sideline, (3) time horizon is achieved """
 
-		x = self.hist[0][-1,0] # Player 1 x position
-		y = self.hist[0][-1,1]	# Player 1 y position
+		x = self.shist[0][-1,0] # Player 1 x position
+		y = self.shist[0][-1,1]	# Player 1 y position
 
 		if (0 == x) or (x == self.m - 1):
 			self.endconditionmet = True
@@ -115,7 +127,7 @@ class game:
 		ax.set_aspect('equal')
 		ax.invert_yaxis()
 		for i in range(self.N):
-			plt.plot(self.hist[i][:,0], self.hist[i][:,1],
+			plt.plot(self.shist[i][:,0], self.shist[i][:,1],
 					marker='o')
 		plt.show()
 
@@ -126,8 +138,9 @@ if __name__ == '__main__':
 	m = 5 # Field width
 	N = 2 # Number of players
 	H = 10 # Time horizon
-	simulator = game(n,m,N,H)
+	sim = game(n,m,N,H)
 	x0 = np.matrix([[1,0],
 					[1,1]])
-	simulator.reset(x0)
-	simulator.run()
+	sim.reset(x0)
+	sim.run()
+	pdb.set_trace()
