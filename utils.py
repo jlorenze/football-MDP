@@ -231,6 +231,29 @@ def mat2vec(x,y,n,m):
         s = -1 # if x,y are not valid, print an error and return -1
     return s
 
+def build_r(n,m):
+    #ReadMe
+        # functionality
+            # Builds a vector whose length is the state size.
+            # Contains the reward of going to that state
+            # Zero for all non-terminal states.
+            # This currently only works for N = 2, where there is one attacker and one defender
+        # INPUTS:
+            # n,m is the size of the field, rows and columns respectively.
+        # OUTPUTS:
+            # r is the terminal reward vector described above
+
+    L = n*m
+
+    r = np.zeros((L**2,))
+
+    for s in range(L**2):
+        pos = state2pos(s,n,m,2) # attacker is assumed to be player 1, i.e. the first row of pos is his position on the field
+        # check if the attacker is out of bounds or tackled
+        if ((pos[0,0] == 0) or (pos[0,1] == n-1) or (pos[0,0] == m-1) or ( (pos[0,0] == pos[1,0]) and (pos[0,1] == pos[1,1]) ) ):
+            r[s] = pos[0,1] # in this case, his vertical advance is his reward
+
+    return r
 
 if __name__ == '__main__':
     # just some random junk code here to test the functionality of our utilities
@@ -244,12 +267,15 @@ if __name__ == '__main__':
     # s = pos2state(pos, 11,11,3)
     # print s
     # print state2pos(s,11,11,3)
+    # N = 10
+    # A = 7
+    # acts = np.zeros((N,))
+    # for i in range(N):
+    #     acts[i] = np.mod(i+8,A)
+    #
+    # print acts
+    # a = act2vec(acts, A)
+    # acts_modem = vec2act(a, A, N)
+    # print acts_modem
 
-    p = np.zeros((2,))
-    p[0] = 0.9
-    p[1] = 1
-    T = T(4,4,2,5,p)
-    # print T[19,19,:,1]
-    # print np.sum(T[19,19,:,1])
-    for i in range(25):
-        print np.sum(T[i,19,:,1])
+    r = build_r(5,5)
