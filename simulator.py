@@ -7,7 +7,7 @@ from policies import *
 from exactmethods import *
 
 class game:
-	def __init__(self, n, m, N, H, T, pi=None):
+	def __init__(self, n, m, N, H, T, pi):
 		self.n = n # length
 		self.m = m # widths
 		self.N = N # Number of players
