@@ -63,11 +63,18 @@ def finiteHorizonValueIteration(H,n,m,A,T):
 				t = T[s,a,:,1] # probability of transition
 				Uvec = Uold[sp] # evaluate Uold at possible states sp
 				Q[aattacker] = np.dot(t,Uvec) # sum over all possible
-				# if s == 181:
-				# 	pdb.set_trace()
+
 			# Now choose the maximum Q
-			U[s] = np.max(Q)
-			pi[s] = np.argmax(Q)
+			Qmax = np.max(Q)
+			idxmax = np.argwhere(Q == Qmax).flatten()
+
+			# Sometimes there are multiple actions with same expected reward
+			if idxmax.size > 1 and np.argwhere(idxmax == 2).size > 0:
+				U[s] = Qmax
+				pi[s] = 2
+			else:
+				U[s] = Qmax
+				pi[s] = np.argmax(Q)
 
 	return pi, U
 
