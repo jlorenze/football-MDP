@@ -283,6 +283,12 @@ def build_R(T,r, n, m):
 
     return R
 
+def load_policy(filename):
+    pi = np.genfromtxt(filename, delimiter = ',')
+    # to save in the corresponding format, use:
+    # np.savetxt(filename, variable, delimiter = ',')
+    return pi
+
 if __name__ == '__main__':
     # just some random junk code here to test the functionality of our utilities
     # pos = np.zeros((3,2))
@@ -305,5 +311,18 @@ if __name__ == '__main__':
     # a = act2vec(acts, A)
     # acts_modem = vec2act(a, A, N)
     # print acts_modem
+
+    n = 5
+    m = 5
+    N = 2
+
+    num_s = (n*m)**N
+
+    x = np.random.normal(0,1,(num_s,))
+    filename = 'dummy_policy.csv'
+    np.savetxt(filename, x, delimiter = ',')
+    y = load_policy(filename)
+    print np.linalg.norm(x-y)
+
 
     r = build_r(5,5)
