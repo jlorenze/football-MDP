@@ -7,7 +7,7 @@ from policies import *
 from exactmethods import *
 
 class game:
-	def __init__(self, n, m, N, H):
+	def __init__(self, n, m, N, H, pi=None):
 		self.n = n # length
 		self.m = m # width
 		self.N = N # Number of players
@@ -18,9 +18,15 @@ class game:
 		self.horizon = H
 
 		# Compute policy for defender
-		print 'Computing policy based on Value Iteration ...'
-		[self.pi, self.U] = finiteHorizonValueIteration(H,n,m,self.A,self.T)
-		print 'Done'
+		if pi is not None:
+			print 'Computing policy based on Value Iteration ...'
+			[self.pi, self.U] = finiteHorizonValueIteration(H,n,m,self.A,self.T)
+			print 'Done'
+		else:
+			self.pi = None
+
+		# Rewards
+		self.r = utils.build_r(n,m)
 
 	def reset(self, x0):
 		""" Resets the game to a new state with starting positions"""
@@ -35,34 +41,47 @@ class game:
 
 	def run(self):
 		""" Assuming it has already been reset """
-		time = 0
-		while not self.endconditionmet and time < self.horizon:
-			self.update()
+		while not self.endconditionmet and self.time < self.horizon:
+			# Determine the action
+			if self.pi is not None:
+				a = self.action()
+			else:
+				print 'Need a policy to run!'
+				sys.exit()
+
+			# Take a step and collect reward by moving to new state sp
+			[r,sp] = self.takeStep(self.s,a)
+
+			# Check if end conditions are met
 			self.checkEnd()
-			time += 1
+
+			# Update game parameters
+			self.s = sp
+			self.time += 1
+
+			# Add the positions to the trajectory history
+			self.updateHist(sp,a)
 
 		self.showTrajectory()
 
-	def action(self, s):
+	def action(self):
 		""" Returns action for each player for state s from policy pi """
 		acts = np.zeros((self.N,)) # initialize the actions
 		
 		# Attacker policy
-		acts[0] = self.pi[s]
+		acts[0] = self.pi[self.s]
 
 		# Defenders policy
 		lookahead = 1
 		p = 1
-		acts[1] = Naive_D(s, self.n, self.m, lookahead, acts[0], p)
+		acts[1] = Naive_D(self.s, self.n, self.m, lookahead, acts[0], p)
 
 		# Convert the vector of player actions to single value
 		a = int(utils.act2vec(acts, self.A))
 		return a
 
-	def update(self):
-		# Determine the action based on each players policies and currents state
-		s = int(self.s)
-		a = self.action(s)
+	def takeStep(self,s,a):
+		s = int(s)
 
 		# For a given state and action pair, we have a distribution
 		# over next states sp given by the transition model T
@@ -77,13 +96,13 @@ class game:
 				break
 
 		# Update the next state
-		sp = nextstates[idx]
-		self.s = sp
-		self.time += 1
+		sp = int(nextstates[idx])
 
-		# Add the positions to the trajectory history
-		self.updateHist(sp,a)
+		# Compute reward
+		r = self.r[sp]
 
+		return r, sp
+		
 	def updateHist(self,s,a):
 		X = utils.state2pos(s, self.n, self.m, self.N)
 		acts = utils.vec2act(a,self.A,self.N)
@@ -138,9 +157,10 @@ if __name__ == '__main__':
 	m = 5 # Field width
 	N = 2 # Number of players
 	H = 10 # Time horizon
-	sim = game(n,m,N,H)
+	sim = game(n,m,N,H,pi='ValueIteration')
 	x0 = np.matrix([[1,0],
 					[1,1]])
 	sim.reset(x0)
+	pdb.set_trace()
 	sim.run()
 	pdb.set_trace()
