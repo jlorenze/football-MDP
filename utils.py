@@ -284,6 +284,12 @@ def build_R(T,r, n, m):
     return R
 
 def load_policy(filename):
+    # ReadMe:
+        # functionality
+            # loads a policy (a vector) from disc.
+        # INPUTS
+            # filename = 'something.csv'
+
     pi = np.genfromtxt(filename, delimiter = ',')
     # to save in the corresponding format, use:
     # np.savetxt(filename, variable, delimiter = ',')
