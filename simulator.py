@@ -7,23 +7,15 @@ from policies import *
 from exactmethods import *
 
 class game:
-	def __init__(self, n, m, N, H, pi=None):
+	def __init__(self, n, m, N, H, T, pi=None):
 		self.n = n # length
-		self.m = m # width
+		self.m = m # widths
 		self.N = N # Number of players
 		self.A = 5 # Number of actions for each player
 		self.s = 1 # Just initialize the state
-		print 'Computing transition probabilities ...'
-		self.T = utils.T(n,m,N,5,[1.0,0.8]); # the transtion model
+		self.T = T # the transtion model
 		self.horizon = H
-
-		# Compute policy for defender
-		if pi is not None:
-			print 'Computing policy based on Value Iteration ...'
-			[self.pi, self.U] = finiteHorizonValueIteration(H,n,m,self.A,self.T)
-			print 'Done'
-		else:
-			self.pi = None
+		self.pi = pi
 
 		# Rewards
 		self.r = utils.build_r(n,m)
@@ -43,11 +35,7 @@ class game:
 		""" Assuming it has already been reset """
 		while not self.endconditionmet and self.time < self.horizon:
 			# Determine the action
-			if self.pi is not None:
-				a = self.action()
-			else:
-				print 'Need a policy to run!'
-				sys.exit()
+			a = self.action()
 
 			# Take a step and collect reward by moving to new state sp
 			[r,sp] = self.takeStep(self.s,a)
@@ -157,10 +145,17 @@ if __name__ == '__main__':
 	m = 5 # Field width
 	N = 2 # Number of players
 	H = 10 # Time horizon
-	sim = game(n,m,N,H,pi='ValueIteration')
+	A = 5 # Number of actions
+
+	print 'Computing transition probabilities ...'
+	T  = utils.T(n,m,N,5,[1.0,0.8])
+
+	print 'Computing policy using Value Iteration'
+	[pi, U] = finiteHorizonValueIteration(H,n,m,A,T)
+
+	sim = game(n,m,N,H,T,pi)
 	x0 = np.matrix([[1,0],
 					[1,1]])
 	sim.reset(x0)
-	pdb.set_trace()
 	sim.run()
 	pdb.set_trace()
