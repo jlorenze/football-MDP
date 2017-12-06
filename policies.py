@@ -45,7 +45,7 @@ def Naive_D(s, n, m, lookahead, a, p):
     else: # if we do not allow lookahead,
         pos = utils.state2pos(s, n, m, 2)
 
-    print pos
+    # print pos
 
     # now make a decision based on pos
     if (pos[0,0] > pos[1,0]): # if the attacker is to the right
