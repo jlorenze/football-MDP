@@ -7,7 +7,7 @@ from policies import *
 from exactmethods import *
 
 class game:
-	def __init__(self, n, m, N, H, T, pi):
+	def __init__(self, n, m, N, H, T, pi=None):
 		self.n = n # length
 		self.m = m # widths
 		self.N = N # Number of players
@@ -33,6 +33,10 @@ class game:
 
 	def run(self):
 		""" Assuming it has already been reset """
+		if self.pi is None:
+			print 'Needs a policy to run'
+			sys.exit()
+			
 		while not self.endconditionmet and self.time < self.horizon:
 			# Determine the action
 			a = self.action()
