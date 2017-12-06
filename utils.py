@@ -255,6 +255,34 @@ def build_r(n,m):
 
     return r
 
+def build_R(T,r, n, m):
+    # ReadMe
+        # functionality
+            # Build the function R(s,a) that specifies the *average* reward obtained by taking action a in state s.
+            # Here we assume the number of players N is 2 and A is 5 (since this is the only setting for which r is defined)
+        # INPUTS
+            # T specifies the transition probabilities.
+            # r specifies how valuable each destination is.
+            # n,m is the number of rows and columns that the field contains.
+        # OUTPUTS
+            # R is a matrix with size num_states by num_actions which specifies the average reward for all state action pairs.
+
+    A = 5 # number of actions each player can take
+    N = 2 # number of players (attacker, defender)
+
+    L = n*m # total locations
+
+    R = np.zeros((L**N, A**N))
+
+    for s in range(L**N):
+        for a in range(A**N):
+            temp = T[s,a,:,:]
+            k = temp.shape[0]
+            for i in range(k):
+                R[s,a] = R[s,a] + temp[i,1]*r[int(temp[i,0])]
+
+    return R
+
 if __name__ == '__main__':
     # just some random junk code here to test the functionality of our utilities
     # pos = np.zeros((3,2))
@@ -278,4 +306,18 @@ if __name__ == '__main__':
     # acts_modem = vec2act(a, A, N)
     # print acts_modem
 
-    r = build_r(5,5)
+    n = 5
+    m = 5
+    N = 2
+    A = 5
+
+    p = np.zeros((2,))
+    p[0] = 0.8
+    p[1] = 0.9
+
+    print "Building T..."
+    T = T(n,m,N,A,p)
+    print "Building r..."
+    r = build_r(n,m)
+    print "Building R..."
+    R = build_R(T,r,n,m)

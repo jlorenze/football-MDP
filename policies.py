@@ -4,6 +4,60 @@ import numpy as np
 import matplotlib.pyplot as plt
 import utils
 
+def Q_Learning(T,R):
+    # ReadMe
+        # functionality
+            # performs Q-learning to train the attacker versus a static defender policy.
+            # this function is only designed to work for N = 2, A = 5 (num_players, num_actions respectively)
+        # INPUTS
+            # The training data should have the sequential form (s,a,r,s'), similar to project 2.
+        # OUTPUTS
+            # pol is the optimal policy for the learned Q values.
+            # Q is the matrix of size num_states by num_actions specifying the quality of a particular state action pair.
+
+    L = n*m
+    N = 2
+    A = 5
+
+    num_iters = 5
+
+    Q = np.zeros((L**N, A**N))
+
+    for t in range(num_iters): # do this num_iters times
+        print "Q Learning iteration %s/%s" % (t,num_iters)
+        for s in range(L**N):
+            for a_a in range(A): # loop over the attacker's action
+                d_a = Naive_D(s,n,m,1, a_a, 1) # determine the defender's action from Naive_D
+                acts = np.zeros((2,))
+                acts[0] = a_a
+                acts[1] = d_a
+                a = int(utils.act2vec(acts, A)) # get the full action
+
+                temp = T[s,a,:,:] # find the transition information from T
+                k = temp.shape[0]
+                new_Q_val = R[s,a] # include the immediate reward
+
+                for i in range(k): # for each possible next state s', we need to find max_{a'} Q(s',a')
+                    sp = int(temp[i,0]) # this is one possible next state
+
+                    max_Q = -1
+
+                    for next_a_a in range(A): # loop over a' to find max_{a'} Q(s',a')
+                        next_d_a = Naive_D(sp, n, m, 1, next_a_a, 1)
+                        next_acts = np.zeros((2,))
+                        next_acts[0] = next_a_a
+                        next_acts[1] = next_d_a
+                        next_a = int(utils.act2vec(next_acts, A)) # get the full next action
+
+                        if (Q[sp, next_a] > max_Q):
+                            max_Q = Q[sp, next_a]
+
+                    new_Q_val = new_Q_val + temp[i,1]*max_Q
+
+                Q[s,a] = new_Q_val
+
+    return Q
+
 def Naive_D(s, n, m, lookahead, a, p):
     # ReadMe
         # functionality
@@ -45,8 +99,6 @@ def Naive_D(s, n, m, lookahead, a, p):
     else: # if we do not allow lookahead,
         pos = utils.state2pos(s, n, m, 2)
 
-    print pos
-
     # now make a decision based on pos
     if (pos[0,0] > pos[1,0]): # if the attacker is to the right
         return 4
@@ -66,14 +118,20 @@ def Naive_D(s, n, m, lookahead, a, p):
 
 if __name__ == '__main__':
     # just some test code to see if the Naive_D function is working properly.
-    n = 10
-    m = 10
-    pos = np.zeros((2,2))
-    pos[0,0] =  5 # x1
-    pos[0,1] =  5 # y1
-    pos[1,0] =  5 # x2
-    pos[1,1] =  6 # y2
+        n = 5
+        m = 5
+        N = 2
+        A = 5
 
-    s = utils.pos2state(pos,n,m,2)
+        p = np.zeros((2,))
+        p[0] = 0.8
+        p[1] = 0.9
 
-    print Naive_D(s, n, m, 1, 3, 1)
+        print "Building T..."
+        T = utils.T(n,m,N,A,p)
+        print "Building r..."
+        r = utils.build_r(n,m)
+        print "Building R..."
+        R = utils.build_R(T,r,n,m)
+        print "Running Q Learning..."
+        Q = Q_Learning(T,R)
