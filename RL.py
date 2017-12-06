@@ -61,7 +61,17 @@ def Sarsa_L(n,m, full_a):
         # once the game finishes, we need to reset N
         N = np.zeros((num_s, num_a))
 
-    return Q
+    # now that we have a Q function, we want to extract the optimal policy from this:
+    pi_Q = np.zeros((num_s,))
+
+    for s in range(num_s):
+        pi_Q[s] = np.argmax(Q[s,:])
+
+    # now we would like to save the policy to disc
+    filename = 'SARSA_L_%s_%s_%s_%s.csv' % (alpha, lam, gamma, num_iters)
+    np.savetxt(filename,pi_Q,delimiter = ',')
+
+    return pi_Q,Q
 
 
 
@@ -78,7 +88,7 @@ if __name__ == '__main__':
     # r = build_r(n,m)
     full_a = Naive_Fullstate(n,m,1) # defender has perfect lookahead for 1 time step.
 
-    Q = Sarsa_L(n,m, full_a)
+    pi,Q = Sarsa_L(n,m, full_a)
 
     # x = np.zeros((5,))
     # P = np.exp(x)
