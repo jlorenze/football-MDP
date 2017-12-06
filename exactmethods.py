@@ -43,17 +43,28 @@ def finiteHorizonValueIteration(H,n,m,A,T):
 	# at absorbing states
 
 	# Bellman update over time horizon
-	Uold = np.copy(U)
 	for k in range(H):
+		# Store the U from the previous update
+		Uold = np.copy(U)
+
 		for s in sc: # Only update states that are not absorbing
 			# Now want to loop through each action to find the one that maximizes
 			Q = np.zeros((A,))
-			for a in range(A):
+			for aattacker in range(A):
+				# According to Defender policy, they will take this action
+				adefender = Naive_D(s, n, m, 1, aattacker, 1)
+
+				# Then the combined action becomes
+				acts = np.array([aattacker,adefender])
+				a = utils.act2vec(acts,A)
+
+				# Now we can compute the Q value
 				sp = T[s,a,:,0].astype(np.int).tolist() # vector of states to go to
 				t = T[s,a,:,1] # probability of transition
 				Uvec = Uold[sp] # evaluate Uold at possible states sp
-				Q[a] = np.dot(t,Uvec) # sum over all possible
-			
+				Q[aattacker] = np.dot(t,Uvec) # sum over all possible
+				# if s == 181:
+				# 	pdb.set_trace()
 			# Now choose the maximum Q
 			U[s] = np.max(Q)
 			pi[s] = np.argmax(Q)

@@ -306,18 +306,4 @@ if __name__ == '__main__':
     # acts_modem = vec2act(a, A, N)
     # print acts_modem
 
-    n = 5
-    m = 5
-    N = 2
-    A = 5
-
-    p = np.zeros((2,))
-    p[0] = 0.8
-    p[1] = 0.9
-
-    print "Building T..."
-    T = T(n,m,N,A,p)
-    print "Building r..."
-    r = build_r(n,m)
-    print "Building R..."
-    R = build_R(T,r,n,m)
+    r = build_r(5,5)

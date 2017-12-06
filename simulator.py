@@ -14,7 +14,7 @@ class game:
 		self.A = 5 # Number of actions for each player
 		self.s = 1 # Just initialize the state
 		print 'Computing transition probabilities ...'
-		self.T = utils.T(n,m,N,5,[0.9,0.9]); # the transtion model
+		self.T = utils.T(n,m,N,5,[1.0,0.8]); # the transtion model
 		self.horizon = H
 
 		# Compute policy for defender
@@ -41,7 +41,7 @@ class game:
 			self.checkEnd()
 			time += 1
 
-		# self.showTrajectory()
+		self.showTrajectory()
 
 	def action(self, s):
 		""" Returns action for each player for state s from policy pi """

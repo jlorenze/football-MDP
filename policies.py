@@ -99,6 +99,8 @@ def Naive_D(s, n, m, lookahead, a, p):
     else: # if we do not allow lookahead,
         pos = utils.state2pos(s, n, m, 2)
 
+    # print pos
+
     # now make a decision based on pos
     if (pos[0,0] > pos[1,0]): # if the attacker is to the right
         return 4
@@ -118,20 +120,14 @@ def Naive_D(s, n, m, lookahead, a, p):
 
 if __name__ == '__main__':
     # just some test code to see if the Naive_D function is working properly.
-        n = 5
-        m = 5
-        N = 2
-        A = 5
+    n = 10
+    m = 10
+    pos = np.zeros((2,2))
+    pos[0,0] =  5 # x1
+    pos[0,1] =  5 # y1
+    pos[1,0] =  5 # x2
+    pos[1,1] =  6 # y2
 
-        p = np.zeros((2,))
-        p[0] = 0.8
-        p[1] = 0.9
+    s = utils.pos2state(pos,n,m,2)
 
-        print "Building T..."
-        T = utils.T(n,m,N,A,p)
-        print "Building r..."
-        r = utils.build_r(n,m)
-        print "Building R..."
-        R = utils.build_R(T,r,n,m)
-        print "Running Q Learning..."
-        Q = Q_Learning(T,R)
+    print Naive_D(s, n, m, 1, 3, 1)
