@@ -43,19 +43,19 @@ class game:
 			a = self.action()
 
 			# Take a step and collect reward by moving to new state sp
-			[self.R,sp] = self.takeStep(self.s,a)
-
-			# Check if end conditions are met
-			self.checkEnd()
+			[r,sp] = self.takeStep(self.s,a)
 
 			# Update game parameters
 			self.s = sp
 			self.time += 1
 
+			# Check if end conditions are met
+			self.checkEnd()
+
 			# Add the positions to the trajectory history
 			self.updateHist(sp,a)
 
-		self.showTrajectory()
+		# self.showTrajectory()
 
 	def action(self):
 		""" Returns action for each player for state s from policy pi """
@@ -109,9 +109,11 @@ class game:
 		Player 1 reaches the end of the grid, (2) Player 1 reaches a
 		sideline, (3) time horizon is achieved """
 
-		pos = utils.state2pos(self.s,self.n,self.m,self.N)
+		pos = utils.state2pos(self.s, self.n, self.m, self.N)
 		x = pos[0,0] # Player 1 x position
 		y = pos[0,1] # Player 1 y position
+		self.x = x
+		self.y = y
 
 		if (0 == x) or (x == self.m - 1):
 			self.endconditionmet = True
@@ -126,10 +128,11 @@ class game:
 			# print 'Time Horizon met.'
 
 		# Check if the defender has captured the attacker
-		pos = utils.state2pos(self.s, self.n, self.m, self.N)
 		if all(pos[0,:] == pos[1,:]):
 			self.endconditionmet = True
 			# print 'Offense was captured.'
+
+		self.R = self.y
 		
 
 	def showTrajectory(self):
@@ -147,21 +150,22 @@ class game:
 
 
 if __name__ == '__main__':
-	n = 5 # Field length
+	n = 7 # Field length
 	m = 5 # Field width
 	N = 2 # Number of players
 	H = 10 # Time horizon
 	A = 5 # Number of actions
 
 	print 'Computing transition probabilities ...'
-	T  = utils.T(n,m,N,5,[1.0,0.8])
+	T  = utils.T(n,m,N,5,[1.0,0.9])
 
 	print 'Computing policy using Value Iteration'
-	[pi, U] = finiteHorizonValueIteration(H,n,m,A,T)
+	# [pi, U] = finiteHorizonValueIteration(H,n,m,A,T)
+	pi = load_policy('Value_Iteration.csv')
 
 	sim = game(n,m,N,H,T,pi)
-	x0 = np.matrix([[1,0],
-					[1,1]])
+	x0 = np.matrix([[2,0],
+					[2,1]])
 	sim.reset(x0)
 	sim.run()
 	pdb.set_trace()
