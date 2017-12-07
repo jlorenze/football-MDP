@@ -10,10 +10,10 @@ from simulator import *
 
 def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
-    alpha = 0.5 # learning rate, should be lower
+    alpha = 0.3 # learning rate, should be lower
     lam = 0.9
     gamma = 0.9
-    num_iters = 50000
+    num_iters = 100000
 
     sftmx = 0.5 # softmax parameter
 
@@ -25,6 +25,7 @@ def Sarsa_L(n,m, full_a,sim):
     num_s = L**N # total number of states
 
     Q = np.zeros((num_s, num_a)) # initialize the Q values to zero.
+    picur = np.argmax(Q,axis=1)
     N = np.zeros((num_s, num_a)) # visit count for Sarsa_L
 
     start = np.matrix( # specify the start state
@@ -38,17 +39,24 @@ def Sarsa_L(n,m, full_a,sim):
     residual = np.inf
     norm = []
     U0hist = []
+    pichange = []
+    locs = np.zeros((n,m))
     while t < num_iters:
         print "progress %s/%s" % (t,num_iters)
         sim.reset(start) # initialize the game
         endflag = 0
+        steps = 0
+        Qold = np.copy(Q)
+        piold = picur
         while (endflag == 0): # go until we reach a terminal state. Need to fix this to something else...
             # Observe reward and next state
             a = full_a[int(sim.s), int(a_a)] # get the concatenated action (attacker, defender)
             r,sp = sim.takeStep(sim.s, int(a)) # obtain the next state and reward
+            X = state2pos(sp,n,m,2)
+            locs[int(X[0,1]),int(X[0,0])] += 1
 
             # Choose action a_t+1 with exploration
-
+            P = np.exp(Q[sp,:])
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
@@ -65,29 +73,33 @@ def Sarsa_L(n,m, full_a,sim):
             sim.s = sp # update the state
             sim.checkEnd() # see if the game is over
             endflag = sim.endconditionmet
+            steps += 1.0
 
-        # # Use Bellman residual to indiciate training process
-        # residual = np.linalg.norm(Q-Qold,ord='fro') # max norm of Q upate
+        # Look at how much the policy changed
+        picur = np.argmax(Q,axis=1)   
+        diff = np.count_nonzero(picur - piold)/steps
+        if diff > 2:
+            pdb.set_trace()
+        pichange.append(diff)
+            
+        # Look at how U[s0] is changing over time
         if t % 10 == 0:
             residual = np.linalg.norm(Q,ord='fro')
             expU0 = np.max(Q[s0])
-            # if expU0 > 100:
-            #     pdb.set_trace()
             U0hist.append(expU0)
             norm.append(residual)
 
-        t += 1
 
         # once the game finishes, we need to reset N
         N = np.zeros((num_s, num_a))
+        t += 1
 
     # now that we have a Q function, we want to extract the optimal policy from this:
     pi_Q = np.zeros((num_s,))
-
     for s in range(num_s):
         pi_Q[s] = np.argmax(Q[s,:])
 
-    # now we would like to save the policy to disc
+    # Now we would like to save the policy to disc
     filename = 'SARSA_L_%s_%s_%s_%s.csv' % (alpha, lam, gamma, num_iters)
     np.savetxt(filename,pi_Q,delimiter = ',')
     print 'Q density: %s' % (np.sum(Q)/float(num_s*num_a))
@@ -100,26 +112,37 @@ def Sarsa_L(n,m, full_a,sim):
         if i >= halfwidth and i <= num - 1 - halfwidth:
             smooth.append(np.mean(U0hist[i-halfwidth:i+halfwidth]))
 
-    # plt.plot(range(num_iters),U0hist)
     plt.plot(range(halfwidth, num - halfwidth),smooth)
     plt.show()
-    pdb.set_trace()
 
+    # Look at the percentage of iterations where we don't change policy
+    samples = 100.0
+    num = len(pichange)
+    percents = []
+    idx = 0
+    while samples*idx < num:
+        zerocount = np.count_nonzero(pichange[100*idx:100*(idx+1)])
+        percents.append(zerocount/samples)
+        idx += 1
+
+    plt.plot(percents,'b')
+    plt.show()
+    pdb.set_trace()
     return pi_Q,Q
 
 
 
 if __name__ == '__main__':
-    n = 5
+    n = 7
     m = 5
     N = 2
     A = 5
     p = np.zeros((2,))
     p[0] = 1
-    p[1] = 0.8
+    p[1] = 0.9
 
     T = T(n,m,N,A,p)
     full_a = Naive_Fullstate(n,m,1) # defender has perfect lookahead for 1 time step.
 
-    sim = game(n,m, 2, 20, T)
+    sim = game(n,m, 2, 10, T)
     pi,Q = Sarsa_L(n,m, full_a,sim)
