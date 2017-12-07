@@ -13,7 +13,9 @@ def Sarsa_L(n,m, full_a,sim):
     alpha = 0.8
     lam = 0.9
     gamma = 0.8
-    num_iters = 1000
+    num_iters = 100
+
+    sftmx = 0.5 # softmax parameter
 
     print "Running SARSA lambda..."
 
@@ -36,7 +38,7 @@ def Sarsa_L(n,m, full_a,sim):
         endflag = 0
         while (endflag == 0): # go until we reach a terminal state. Need to fix this to something else...
             # use softmax to pick an action:
-            P = np.exp(Q[int(sim.s),:])
+            P = np.exp(sftmx*Q[int(sim.s),:])
             P = P/np.sum(P) # extract the softmax distribution from Q
             a_a = np.argmax(np.random.multinomial(1, P)) # draw an action from P
 
@@ -44,7 +46,7 @@ def Sarsa_L(n,m, full_a,sim):
             a = full_a[int(sim.s), int(a_a)] # get the concatenated action (attacker, defender)
 
             r,sp = sim.takeStep(sim.s, a) # obtain the next state and reward
-            P = np.exp(Q[int(sp), :])
+            P = np.exp(sftmx*Q[int(sp), :])
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
@@ -75,7 +77,7 @@ def Sarsa_L(n,m, full_a,sim):
 
 
 if __name__ == '__main__':
-    n = 5
+    n = 7
     m = 5
     N = 2
     A = 5
