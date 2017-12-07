@@ -12,7 +12,7 @@ def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
     alpha = 0.3 # learning rate, should be lower
     lam = 0.9
-    gamma = 1
+    gamma = 0.9
     num_iters = 10000
 
     sftmx = 0.5 # softmax parameter
@@ -43,18 +43,17 @@ def Sarsa_L(n,m, full_a,sim):
         sim.reset(start) # initialize the game
         endflag = 0
         while (endflag == 0): # go until we reach a terminal state. Need to fix this to something else...
-            # use softmax to pick an action:
-            P = np.exp(Q[int(sim.s),:])
-            P = P/np.sum(P) # extract the softmax distribution from Q
-            a_a = np.argmax(np.random.multinomial(1, P)) # draw an action from P
-
             # Observe reward and next state
             a = full_a[int(sim.s), int(a_a)] # get the concatenated action (attacker, defender)
             r,sp = sim.takeStep(sim.s, int(a)) # obtain the next state and reward
-            
 
             # Choose action a_t+1 with exploration
-            P = np.exp(Q[int(sp), :])
+            normQ = np.linalg.norm(Q[sp, :])
+            if normQ > 0:
+                P = np.exp(Q[sp, :]/normQ)
+            else:
+                P = np.exp(Q[sp, :])
+            
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
@@ -77,6 +76,8 @@ def Sarsa_L(n,m, full_a,sim):
         if t % 10 == 0:
             residual = np.linalg.norm(Q,ord='fro')
             expU0 = np.max(Q[s0])
+            if expU0 > 100:
+                pdb.set_trace()
             U0hist.append(expU0)
             norm.append(residual)
 
