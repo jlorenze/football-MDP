@@ -10,10 +10,10 @@ from simulator import *
 
 def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
-    alpha = 0.8
+    alpha = 0.3 # learning rate, should be lower
     lam = 0.9
-    gamma = 0.8
-    num_iters = 1000
+    gamma = 1
+    num_iters = 10000
 
     print "Running SARSA lambda..."
 
@@ -26,35 +26,55 @@ def Sarsa_L(n,m, full_a,sim):
     N = np.zeros((num_s, num_a)) # visit count for Sarsa_L
 
     start = np.matrix( # specify the start state
-        [[0,2],
-         [2,2]]
+        [[2,0],
+         [2,1]]
     )
+    s0 = pos2state(start,n,m,2)
+    a_a = 2
 
-    for t in range(num_iters):
+    t = 0
+    residual = np.inf
+    norm = []
+    U0hist = []
+    while t < num_iters:
         print "progress %s/%s" % (t,num_iters)
         sim.reset(start) # initialize the game
         endflag = 0
         while (endflag == 0): # go until we reach a terminal state. Need to fix this to something else...
-            # use softmax to pick an action:
-            P = np.exp(Q[int(sim.s),:])
-            P = P/np.sum(P) # extract the softmax distribution from Q
-            a_a = np.argmax(np.random.multinomial(1, P)) # draw an action from P
 
-            N[sim.s,a_a] = N[sim.s,a_a] + 1 # increment the counts
+            # Observe reward and next state
             a = full_a[int(sim.s), int(a_a)] # get the concatenated action (attacker, defender)
+            r,sp = sim.takeStep(sim.s, int(a)) # obtain the next state and reward
+            
 
-            r,sp = sim.takeStep(sim.s, a) # obtain the next state and reward
+            # Choose action a_t+1 with exploration
             P = np.exp(Q[int(sp), :])
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
+            # Increment counts
+            N[sim.s,a_a] = N[sim.s,a_a] + 1 # increment the counts
+            
+            # Update Q
             delta = r + gamma*Q[sp, next_a_a] - Q[sim.s, a_a] # specify delta
             Q = Q + alpha*delta*N # update Q
             N = gamma*lam*N # update N
 
+            # Update action and state for next iteration
+            a_a = next_a_a
             sim.s = sp # update the state
             sim.checkEnd() # see if the game is over
             endflag = sim.endconditionmet
+
+        # # Use Bellman residual to indiciate training process
+        # residual = np.linalg.norm(Q-Qold,ord='fro') # max norm of Q upate
+        if t % 10 == 0:
+            residual = np.linalg.norm(Q,ord='fro')
+            expU0 = np.max(Q[s0])
+            U0hist.append(expU0)
+            norm.append(residual)
+
+        t += 1
 
         # once the game finishes, we need to reset N
         N = np.zeros((num_s, num_a))
@@ -70,6 +90,19 @@ def Sarsa_L(n,m, full_a,sim):
     np.savetxt(filename,pi_Q,delimiter = ',')
     print 'Q density: %s' % (np.sum(Q)/float(num_s*num_a))
 
+    # Lets do a moving average to smooth a bit
+    num = len(U0hist)
+    halfwidth = 20
+    smooth = []
+    for i,x in enumerate(U0hist):
+        if i >= halfwidth and i <= num - 1 - halfwidth:
+            smooth.append(np.mean(U0hist[i-halfwidth:i+halfwidth]))
+
+    # plt.plot(range(num_iters),U0hist)
+    plt.plot(range(halfwidth, num - halfwidth),smooth)
+    plt.show()
+    pdb.set_trace()
+
     return pi_Q,Q
 
 
@@ -80,8 +113,8 @@ if __name__ == '__main__':
     N = 2
     A = 5
     p = np.zeros((2,))
-    p[0] = 0.8
-    p[1] = 0.9
+    p[0] = 1
+    p[1] = 0.8
 
     T = T(n,m,N,A,p)
     full_a = Naive_Fullstate(n,m,1) # defender has perfect lookahead for 1 time step.
