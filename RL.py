@@ -10,10 +10,10 @@ from simulator import *
 
 def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
-    alpha = 0.3 # learning rate, should be lower
+    alpha = 0.5 # learning rate, should be lower
     lam = 0.9
     gamma = 0.9
-    num_iters = 10000
+    num_iters = 50000
 
     sftmx = 0.5 # softmax parameter
 
@@ -48,12 +48,12 @@ def Sarsa_L(n,m, full_a,sim):
             r,sp = sim.takeStep(sim.s, int(a)) # obtain the next state and reward
 
             # Choose action a_t+1 with exploration
-            normQ = np.linalg.norm(Q[sp, :])
-            if normQ > 0:
-                P = np.exp(Q[sp, :]/normQ)
-            else:
-                P = np.exp(Q[sp, :])
-            
+            # normQ = np.linalg.norm(Q[sp, :])
+            # if normQ > 0:
+            #     P = np.exp(Q[sp, :]/normQ)
+            # else:
+            #     P = np.exp(Q[sp, :])
+            P = np.exp(Q[sp, :])
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
@@ -76,8 +76,8 @@ def Sarsa_L(n,m, full_a,sim):
         if t % 10 == 0:
             residual = np.linalg.norm(Q,ord='fro')
             expU0 = np.max(Q[s0])
-            if expU0 > 100:
-                pdb.set_trace()
+            # if expU0 > 100:
+            #     pdb.set_trace()
             U0hist.append(expU0)
             norm.append(residual)
 
