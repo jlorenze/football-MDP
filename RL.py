@@ -15,6 +15,8 @@ def Sarsa_L(n,m, full_a,sim):
     gamma = 1
     num_iters = 10000
 
+    sftmx = 0.5 # softmax parameter
+
     print "Running SARSA lambda..."
 
     L = n*m # total number of locations
@@ -41,6 +43,10 @@ def Sarsa_L(n,m, full_a,sim):
         sim.reset(start) # initialize the game
         endflag = 0
         while (endflag == 0): # go until we reach a terminal state. Need to fix this to something else...
+            # use softmax to pick an action:
+            P = np.exp(Q[int(sim.s),:])
+            P = P/np.sum(P) # extract the softmax distribution from Q
+            a_a = np.argmax(np.random.multinomial(1, P)) # draw an action from P
 
             # Observe reward and next state
             a = full_a[int(sim.s), int(a_a)] # get the concatenated action (attacker, defender)
