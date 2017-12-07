@@ -8,16 +8,14 @@ from simulator import *
 # also
 # import matplotlib.pylab as plt
 
-def Sarsa_L(n,m, full_a):
+def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
     alpha = 0.8
     lam = 0.9
     gamma = 0.8
-    num_iters = 10
+    num_iters = 1000
 
     print "Running SARSA lambda..."
-
-    sim = game(n,m, 2, 10)
 
     L = n*m # total number of locations
     N = 2 # number of players (attacker, defender)
@@ -29,7 +27,7 @@ def Sarsa_L(n,m, full_a):
 
     start = np.matrix( # specify the start state
         [[0,2],
-        [2,2]]
+         [2,2]]
     )
 
     for t in range(num_iters):
@@ -70,6 +68,7 @@ def Sarsa_L(n,m, full_a):
     # now we would like to save the policy to disc
     filename = 'SARSA_L_%s_%s_%s_%s.csv' % (alpha, lam, gamma, num_iters)
     np.savetxt(filename,pi_Q,delimiter = ',')
+    print 'Q density: %s' % (np.sum(Q)/float(num_s*num_a))
 
     return pi_Q,Q
 
@@ -84,14 +83,8 @@ if __name__ == '__main__':
     p[0] = 0.8
     p[1] = 0.9
 
-    # T = T(n,m,N,A,p)
-    # r = build_r(n,m)
+    T = T(n,m,N,A,p)
     full_a = Naive_Fullstate(n,m,1) # defender has perfect lookahead for 1 time step.
 
-    pi,Q = Sarsa_L(n,m, full_a)
-
-    # x = np.zeros((5,))
-    # P = np.exp(x)
-    # P = P/np.sum(P)
-    # print P
-    # print np.argmax(np.random.multinomial(1,P))
+    sim = game(n,m, 2, 20, T)
+    pi,Q = Sarsa_L(n,m, full_a,sim)
