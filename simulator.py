@@ -19,6 +19,7 @@ class game:
 
 		# Rewards
 		self.r = utils.build_r(n,m)
+		self.R = 0
 
 	def reset(self, x0):
 		""" Resets the game to a new state with starting positions"""
@@ -36,13 +37,13 @@ class game:
 		if self.pi is None:
 			print 'Needs a policy to run'
 			sys.exit()
-			
+
 		while not self.endconditionmet and self.time < self.horizon:
 			# Determine the action
 			a = self.action()
 
 			# Take a step and collect reward by moving to new state sp
-			[r,sp] = self.takeStep(self.s,a)
+			[self.R,sp] = self.takeStep(self.s,a)
 
 			# Check if end conditions are met
 			self.checkEnd()
@@ -108,26 +109,27 @@ class game:
 		Player 1 reaches the end of the grid, (2) Player 1 reaches a
 		sideline, (3) time horizon is achieved """
 
-		x = self.shist[0][-1,0] # Player 1 x position
-		y = self.shist[0][-1,1]	# Player 1 y position
+		pos = utils.state2pos(self.s,self.n,self.m,self.N)
+		x = pos[0,0] # Player 1 x position
+		y = pos[0,1] # Player 1 y position
 
 		if (0 == x) or (x == self.m - 1):
 			self.endconditionmet = True
-			print 'Sideline reached.'
+			# print 'Sideline reached.'
 
 		if y == self.n - 1:
 			self.endconditionmet = True
-			print 'End of field reached.'
+			# print 'End of field reached.'
 
 		if self.time == self.horizon:
 			self.endconditionmet = True
-			print 'Time Horizon met.'
+			# print 'Time Horizon met.'
 
 		# Check if the defender has captured the attacker
 		pos = utils.state2pos(self.s, self.n, self.m, self.N)
 		if all(pos[0,:] == pos[1,:]):
 			self.endconditionmet = True
-			print 'Offense was captured.'
+			# print 'Offense was captured.'
 		
 
 	def showTrajectory(self):
