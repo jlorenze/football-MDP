@@ -48,18 +48,13 @@ def Sarsa_L(n,m, full_a,sim):
             r,sp = sim.takeStep(sim.s, int(a)) # obtain the next state and reward
 
             # Choose action a_t+1 with exploration
-            normQ = np.linalg.norm(Q[sp, :])
-            if normQ > 0:
-                P = np.exp(Q[sp, :]/normQ)
-            else:
-                P = np.exp(Q[sp, :])
-            
+
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
             # Increment counts
             N[sim.s,a_a] = N[sim.s,a_a] + 1 # increment the counts
-            
+
             # Update Q
             delta = r + gamma*Q[sp, next_a_a] - Q[sim.s, a_a] # specify delta
             Q = Q + alpha*delta*N # update Q
