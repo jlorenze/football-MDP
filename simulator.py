@@ -7,7 +7,7 @@ from policies import *
 from exactmethods import *
 
 class game:
-	def __init__(self, n, m, N, H, T, pi=None):
+	def __init__(self, n, m, N, H, T, pi=None, display=False):
 		self.n = n # length
 		self.m = m # widths
 		self.N = N # Number of players
@@ -16,15 +16,18 @@ class game:
 		self.T = T # the transtion model
 		self.horizon = H
 		self.pi = pi
+		self.display = display
 
 		# Rewards
 		self.r = utils.build_r(n,m)
 		self.R = 0
+		self.capture = False
 
 	def reset(self, x0):
 		""" Resets the game to a new state with starting positions"""
 		self.s = utils.pos2state(x0, self.n, self.m, self.N)
 		self.R = 0
+		self.capture = False
 
 		# Reset trajectory history
 		self.shist = [x0[i,:] for i in range(self.N)]
@@ -55,7 +58,8 @@ class game:
 			# Add the positions to the trajectory history
 			self.updateHist(sp,a)
 
-		# self.showTrajectory()
+		if self.display:
+			self.showTrajectory()
 
 	def action(self):
 		""" Returns action for each player for state s from policy pi """
@@ -130,6 +134,7 @@ class game:
 		# Check if the defender has captured the attacker
 		if all(pos[0,:] == pos[1,:]):
 			self.endconditionmet = True
+			self.capture = True
 			# print 'Offense was captured.'
 
 		self.R = self.y
@@ -157,15 +162,17 @@ if __name__ == '__main__':
 	A = 5 # Number of actions
 
 	print 'Computing transition probabilities ...'
-	T  = utils.T(n,m,N,5,[1.0,0.9])
+	T  = utils.T(n,m,N,5,[1.0,0.8])
 
 	print 'Computing policy using Value Iteration'
 	# [pi, U] = finiteHorizonValueIteration(H,n,m,A,T)
-	pi = load_policy('Value_Iteration.csv')
+	pi = load_policy('SARSA_L_0.35_0.9_0.9_100000_0.05.csv')
 
-	sim = game(n,m,N,H,T,pi)
+	sim = game(n,m,N,H,T,pi,display=True)
 	x0 = np.matrix([[2,0],
 					[2,1]])
+	s0 = utils.pos2state(x0,n,m,N)
+
 	sim.reset(x0)
 	sim.run()
 	pdb.set_trace()
