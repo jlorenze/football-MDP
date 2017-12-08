@@ -76,9 +76,6 @@ def Naive_Fullstate(n,m,p):
             acts[0] = a_a
             acts[1] = d_a
             full_a[s,a_a] = act2vec(acts,A)
-            if s == 247 and a_a == 0:
-                import pdb
-                pdb.set_trace()
 
     return full_a
 
