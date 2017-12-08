@@ -14,7 +14,7 @@ def Sarsa_L(n,m, full_a,sim):
     lam = 0.9
     gamma = 0.9
     num_iters = 10000
-    tau = 0.05 # softmax parameter (tau = 0 means p(amax) = 1)
+    tau = 0.1 # softmax parameter (tau = 0 means p(amax) = 1)
 
     print "Running SARSA lambda..."
 
@@ -44,6 +44,8 @@ def Sarsa_L(n,m, full_a,sim):
              np.matrix([[1,0],[3,1]]),
              np.matrix([[3,0],[1,1]])]
     # start = [np.matrix([[2,0],[2,1]])]
+
+    s0 = pos2state(start[0],n,m,2)
 
     t = 0
     residual = np.inf
