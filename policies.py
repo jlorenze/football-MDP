@@ -62,7 +62,7 @@ def Naive_D(s, n, m, lookahead, a, p):
         else:
             return 2 # in this case, the attacker will try to advance, so you should follow him.
 
-def Naive_Fullstate(m,n,p):
+def Naive_Fullstate(n,m,p):
     L = n*m
     N = 2
     A = 5
@@ -76,6 +76,9 @@ def Naive_Fullstate(m,n,p):
             acts[0] = a_a
             acts[1] = d_a
             full_a[s,a_a] = act2vec(acts,A)
+            if s == 247 and a_a == 0:
+                import pdb
+                pdb.set_trace()
 
     return full_a
 
