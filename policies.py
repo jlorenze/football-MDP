@@ -79,6 +79,18 @@ def Naive_Fullstate(n,m,p):
 
     return full_a
 
+def RandomPolicy(n,m,A,N):
+    import pdb
+    P = np.ones((A,))
+    P = P/np.sum(P)
+    
+    pi = np.zeros(((n*m)**N,))
+    for s in range((n*m)**N):
+        pi[s] = np.argmax(np.random.multinomial(1, P))
+
+    filename = 'RandomPolicy.csv'
+    np.savetxt(filename,pi,delimiter = ',')
+
 if __name__ == '__main__':
     # just some test code to see if the Naive_D function is working properly.
     # n = 10
@@ -93,7 +105,7 @@ if __name__ == '__main__':
     #
     # print Naive_D(s, n, m, 1, 3, 1)
 
-    a = Naive_Fullstate(5,5,1)
+    RandomPolicy(7,5,5,2)
 
 # def Q_Learning(T,R):
 #     # ReadMe
