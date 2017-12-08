@@ -10,12 +10,11 @@ from simulator import *
 
 def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
-    alpha = 0.3 # learning rate, should be lower
+    alpha = 0.35 # learning rate, should be lower
     lam = 0.9
     gamma = 0.9
-    num_iters = 100000
-
-    sftmx = 0.5 # softmax parameter
+    num_iters = 10000
+    tau = 0.05 # softmax parameter (tau = 0 means p(amax) = 1)
 
     print "Running SARSA lambda..."
 
@@ -24,16 +23,27 @@ def Sarsa_L(n,m, full_a,sim):
     num_a = 5 # total number of unique actions
     num_s = L**N # total number of states
 
+    # Initialize Q matrix
     Q = np.zeros((num_s, num_a)) # initialize the Q values to zero.
+
+    # Initialize Q values for some states to nonzero values
+    for s in range(num_s):
+        pos = state2pos(s,n,m,2)
+        if pos[0,1] >= pos[1,1] and (pos[0,0] != pos[1,0] or pos[0,1] != pos[1,1]):
+            Q[s,2] = n
+
     picur = np.argmax(Q,axis=1)
     N = np.zeros((num_s, num_a)) # visit count for Sarsa_L
 
-    start = np.matrix( # specify the start state
-        [[2,0],
-         [2,1]]
-    )
-    s0 = pos2state(start,n,m,2)
-    a_a = 2
+    # Start from several to increase chance of exploring
+    start = [np.matrix([[2,0],[2,1]]),
+             np.matrix([[1,0],[2,1]]),
+             np.matrix([[3,0],[2,1]]),
+             np.matrix([[2,0],[3,1]]),
+             np.matrix([[2,0],[1,1]]),
+             np.matrix([[1,0],[3,1]]),
+             np.matrix([[3,0],[1,1]])]
+    # start = [np.matrix([[2,0],[2,1]])]
 
     t = 0
     residual = np.inf
@@ -43,43 +53,54 @@ def Sarsa_L(n,m, full_a,sim):
     locs = np.zeros((n,m))
     while t < num_iters:
         print "progress %s/%s" % (t,num_iters)
-        sim.reset(start) # initialize the game
+
+        # Randomly select starting position
+        idx = int(np.round((len(start)-1)*np.random.rand()))
+        x0 = start[idx]
+        sim.reset(x0) # initialize the game
+
+        # Choose action a_0 with exploration
+        P = np.exp(Q[sim.s,:]/tau)
+        P = P/np.sum(P)
+        a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
+
         endflag = 0
         steps = 0
         Qold = np.copy(Q)
         piold = picur
         while (endflag == 0): # go until we reach a terminal state. Need to fix this to something else...
             # Observe reward and next state
-            a = full_a[int(sim.s), int(a_a)] # get the concatenated action (attacker, defender)
-            r,sp = sim.takeStep(sim.s, int(a)) # obtain the next state and reward
-            X = state2pos(sp,n,m,2)
-            locs[int(X[0,1]),int(X[0,0])] += 1
+            s = sim.s
+            a = full_a[int(s), int(a_a)] # get the concatenated action (attacker, defender)
+            r,sp = sim.takeStep(s, int(a)) # obtain the next state and reward
+            sim.s = sp # update the state in the sim
+            sim.checkEnd() # see if the game is over
+            endflag = sim.endconditionmet
+
+            # Check if captured
+            if sim.capture and endflag:
+                r = 0
 
             # Choose action a_t+1 with exploration
-            P = np.exp(Q[sp,:])
+            P = np.exp(Q[sp,:]/tau)
             P = P/np.sum(P)
             next_a_a = np.argmax(np.random.multinomial(1, P)) # get the next action
 
             # Increment counts
-            N[sim.s,a_a] = N[sim.s,a_a] + 1 # increment the counts
+            N[s,a_a] = N[s,a_a] + 1 # increment the counts
             
             # Update Q
-            delta = r + gamma*Q[sp, next_a_a] - Q[sim.s, a_a] # specify delta
+            delta = r + gamma*Q[sp, next_a_a] - Q[s, a_a] # specify delta
             Q = Q + alpha*delta*N # update Q
             N = gamma*lam*N # update N
 
             # Update action and state for next iteration
             a_a = next_a_a
-            sim.s = sp # update the state
-            sim.checkEnd() # see if the game is over
-            endflag = sim.endconditionmet
             steps += 1.0
 
         # Look at how much the policy changed
         picur = np.argmax(Q,axis=1)   
         diff = np.count_nonzero(picur - piold)/steps
-        if diff > 2:
-            pdb.set_trace()
         pichange.append(diff)
             
         # Look at how U[s0] is changing over time
@@ -88,7 +109,6 @@ def Sarsa_L(n,m, full_a,sim):
             expU0 = np.max(Q[s0])
             U0hist.append(expU0)
             norm.append(residual)
-
 
         # once the game finishes, we need to reset N
         N = np.zeros((num_s, num_a))
@@ -100,7 +120,7 @@ def Sarsa_L(n,m, full_a,sim):
         pi_Q[s] = np.argmax(Q[s,:])
 
     # Now we would like to save the policy to disc
-    filename = 'SARSA_L_%s_%s_%s_%s.csv' % (alpha, lam, gamma, num_iters)
+    filename = 'SARSA_L_%s_%s_%s_%s_%s.csv' % (alpha, lam, gamma, num_iters,tau)
     np.savetxt(filename,pi_Q,delimiter = ',')
     print 'Q density: %s' % (np.sum(Q)/float(num_s*num_a))
 
@@ -137,12 +157,14 @@ if __name__ == '__main__':
     m = 5
     N = 2
     A = 5
+    H = 10
     p = np.zeros((2,))
     p[0] = 1
-    p[1] = 0.9
+    p[1] = 0.8
 
+    # T = TTrain(n,m,N,A,p)
     T = T(n,m,N,A,p)
     full_a = Naive_Fullstate(n,m,1) # defender has perfect lookahead for 1 time step.
 
-    sim = game(n,m, 2, 10, T)
-    pi,Q = Sarsa_L(n,m, full_a,sim)
+    sim = game(n,m, 2, H, T)
+    pi,Q = Sarsa_L(n,m,full_a,sim)
