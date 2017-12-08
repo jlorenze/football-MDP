@@ -76,15 +76,21 @@ def finiteHorizonValueIteration(H,n,m,A,T):
 				U[s] = Qmax
 				pi[s] = np.argmax(Q)
 
+			np.savetxt('Value_Iteration.csv',pi,delimiter=',')
+
 	return pi, U
 
 
 if __name__ == '__main__':
-	H = 5 
+	H = 10 
 	n = 7 # field length (n >= 2)
 	m = 5 # field width (m >= 3)
 	A = 5 # number of possible actions
-	p = [0.9, 0.9] # probabilities of transitioning
+	p = [1, 0.8] # probabilities of transitioning
 	T = utils.T(n,m,2,A,p); # the transtion model
+	start = np.matrix( # specify the start state
+        [[2,0],
+         [2,1]])
+	s0 = utils.pos2state(start,n,m,2)
 	[pi,U] = finiteHorizonValueIteration(H,n,m,A,T)
 	pdb.set_trace()

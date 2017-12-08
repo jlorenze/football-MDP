@@ -8,15 +8,14 @@ from simulator import *
 
 if __name__ == '__main__':
 
-    # SARSA_L_Pi = load_policy('SARSA_L_0.3_0.9_0.9_5000.csv')
-    SARSA_L_Pi = load_policy('SARSA_L_0.5_0.9_0.9_100000.csv')
-    VI_Pi = load_policy('Value_Iteration.csv')
+    SARSA_L_Pi = load_policy('SARSA_L_0.35_0.9_0.9_100000_0.05.csv')
+    VI_L_Pi = load_policy('Value_Iteration.csv')
 
     n = 7
     m = 5
     N = 2
     A = 5
-    H = 20
+    H = 10
     p = np.zeros((2,))
     p[0] = 1
     p[1] = 0.8
@@ -24,7 +23,7 @@ if __name__ == '__main__':
     T = T(n,m,N,A,p)
 
     SL = game(n,m,N,H,T, SARSA_L_Pi) #instantiate game with Sarsa Lambda policy
-    VI = game(n,m,N,H,T, SARSA_L_Pi) #instantiate game with Value iteration policy
+    VI = game(n,m,N,H,T,VI_L_Pi) #instantiate game with Value iteration policy
 
     R_SL = 0 # avg reward for Sarsa Lambda
     R_VI = 0 # avg reward for Value Iteration
