@@ -155,7 +155,7 @@ class game:
 		plt.plot(self.shist[1][-1,0], self.shist[1][-1,1],marker='o',linestyle='--',color='b')
 		plt.xlabel('Field Width')
 		plt.ylabel('Distance Down Field')
-		plt.title('Value Iteration Policy')
+		plt.title('Reinforcement Learning Policy 1')
 		plt.show()
 
 
@@ -172,7 +172,7 @@ if __name__ == '__main__':
 
 	print 'Computing policy using Value Iteration'
 	# [pi, U] = finiteHorizonValueIteration(H,n,m,A,T)
-	pi = load_policy('RandomPolicy.csv')
+	pi = load_policy('fullr_SARSA_L_0.3_0.9_0.9_10000_0.05.csv')
 
 	sim = game(n,m,N,H,T,pi,display=True)
 	x0 = np.matrix([[2,0],

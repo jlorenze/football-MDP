@@ -9,7 +9,7 @@ from simulator import *
 if __name__ == '__main__':
 
     
-    SARSA_L_Pi = load_policy('SARSA_L_0.3_0.9_0.9_1000000_2.csv')
+    SARSA_L_Pi = load_policy('partr_SARSA_L_0.3_0.9_0.9_10000_0.05.csv')
     VI_L_Pi = load_policy('Value_Iteration.csv')
 
     n = 7
