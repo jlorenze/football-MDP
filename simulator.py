@@ -143,13 +143,19 @@ class game:
 	def showTrajectory(self):
 		plt.figure()
 		ax = plt.gca()
-		ax.set_ylim([0, self.n-1])
+		ax.set_ylim([-1, self.n-1])
 		ax.set_xlim([0, self.m-1])
 		ax.set_aspect('equal')
 		ax.invert_yaxis()
-		for i in range(self.N):
-			plt.plot(self.shist[i][:,0], self.shist[i][:,1],
-					marker='o')
+		plt.plot(self.shist[0][:,0], self.shist[0][:,1],marker=None,markersize=10,color='r')
+		plt.plot(self.shist[1][:,0], self.shist[1][:,1],marker=None,linestyle='--',color='b')
+		plt.plot(self.shist[0][0,0], self.shist[0][0,1],marker='x',markersize=10,color='r')
+		plt.plot(self.shist[1][0,0], self.shist[1][0,1],marker='o',linestyle='--')
+		plt.plot(self.shist[0][-1,0], self.shist[0][-1,1],marker='x',markersize=10,color='r')
+		plt.plot(self.shist[1][-1,0], self.shist[1][-1,1],marker='o',linestyle='--',color='b')
+		plt.xlabel('Field Width')
+		plt.ylabel('Distance Down Field')
+		plt.title('Value Iteration Policy')
 		plt.show()
 
 
@@ -166,7 +172,7 @@ if __name__ == '__main__':
 
 	print 'Computing policy using Value Iteration'
 	# [pi, U] = finiteHorizonValueIteration(H,n,m,A,T)
-	pi = load_policy('SARSA_L_0.35_0.9_0.9_100000_0.05.csv')
+	pi = load_policy('RandomPolicy.csv')
 
 	sim = game(n,m,N,H,T,pi,display=True)
 	x0 = np.matrix([[2,0],
