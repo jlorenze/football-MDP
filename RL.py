@@ -10,11 +10,11 @@ from simulator import *
 
 def Sarsa_L(n,m, full_a,sim):
     # SARSA LAMBDA parameters:
-    alpha = 0.35 # learning rate, should be lower
+    alpha = 0.3 # learning rate, should be lower
     lam = 0.9
     gamma = 0.9
     num_iters = 10000
-    tau = 0.1 # softmax parameter (tau = 0 means p(amax) = 1)
+    tau = 0.05 # softmax parameter (tau = 0 means p(amax) = 1)
 
     print "Running SARSA lambda..."
 
@@ -80,8 +80,8 @@ def Sarsa_L(n,m, full_a,sim):
             endflag = sim.endconditionmet
 
             # Check if captured
-            if sim.capture and endflag:
-                r = 0
+            # if sim.capture and endflag:
+            #     r = 0
 
             # Choose action a_t+1 with exploration
             P = np.exp(Q[sp,:]/tau)
@@ -107,7 +107,7 @@ def Sarsa_L(n,m, full_a,sim):
             
         # Look at how U[s0] is changing over time
         if t % 10 == 0:
-            residual = np.linalg.norm(Q,ord='fro')
+            residual = np.linalg.norm(Q-Qold,ord='fro')
             expU0 = np.max(Q[s0])
             U0hist.append(expU0)
             norm.append(residual)
@@ -128,29 +128,34 @@ def Sarsa_L(n,m, full_a,sim):
 
     # Lets do a moving average to smooth a bit
     num = len(U0hist)
-    halfwidth = 20
+    halfwidth = 100
     smooth = []
     for i,x in enumerate(U0hist):
         if i >= halfwidth and i <= num - 1 - halfwidth:
             smooth.append(np.mean(U0hist[i-halfwidth:i+halfwidth]))
 
-    plt.plot(range(halfwidth, num - halfwidth),smooth)
+    idx = range(halfwidth,num - halfwidth)
+    plt.plot(idx,smooth)
+    plt.ylim([0,n])
+    plt.xlabel('Training Iteration')
+    plt.ylabel('U')
+    plt.title('Expected Utility at Starting Point')
     plt.show()
 
-    # Look at the percentage of iterations where we don't change policy
-    samples = 100.0
-    num = len(pichange)
-    percents = []
-    idx = 0
-    while samples*idx < num:
-        zerocount = np.count_nonzero(pichange[100*idx:100*(idx+1)])
-        percents.append(zerocount/samples)
-        idx += 1
+    # # Look at the percentage of iterations where we don't change policy
+    # samples = 100.0
+    # num = len(pichange)
+    # percents = []
+    # idx = 0
+    # while samples*idx < num:
+    #     zerocount = np.count_nonzero(pichange[100*idx:100*(idx+1)])
+    #     percents.append(zerocount/samples)
+    #     idx += 1
 
-    plt.plot(percents,'b')
-    plt.show()
+    # plt.plot(percents,'b')
+    # plt.show()
     pdb.set_trace()
-    return pi_Q,Q
+    return pi_Q, Q
 
 
 
