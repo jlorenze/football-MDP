@@ -88,8 +88,9 @@ def RandomPolicy(n,m,A,N):
     for s in range((n*m)**N):
         pi[s] = np.argmax(np.random.multinomial(1, P))
 
-    filename = 'RandomPolicy.csv'
-    np.savetxt(filename,pi,delimiter = ',')
+    # filename = 'RandomPolicy.csv'
+    # np.savetxt(filename,pi,delimiter = ',')
+    return pi
 
 if __name__ == '__main__':
     # just some test code to see if the Naive_D function is working properly.
@@ -105,7 +106,7 @@ if __name__ == '__main__':
     #
     # print Naive_D(s, n, m, 1, 3, 1)
 
-    RandomPolicy(7,5,5,2)
+    pi = RandomPolicy(7,5,5,2)
 
 # def Q_Learning(T,R):
 #     # ReadMe
