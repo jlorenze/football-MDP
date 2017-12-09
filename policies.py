@@ -92,6 +92,13 @@ def RandomPolicy(n,m,A,N):
     # np.savetxt(filename,pi,delimiter = ',')
     return pi
 
+def recurse(y):
+    if y == 6:
+        E = 6
+    else:
+        E = 0.8*(y+1) + 0.15*6 + 0.05*recurse(y+1)
+    return E
+
 if __name__ == '__main__':
     # just some test code to see if the Naive_D function is working properly.
     # n = 10
@@ -106,7 +113,9 @@ if __name__ == '__main__':
     #
     # print Naive_D(s, n, m, 1, 3, 1)
 
-    pi = RandomPolicy(7,5,5,2)
+    # pi = RandomPolicy(7,5,5,2)
+    E = recurse(0)
+    print E
 
 # def Q_Learning(T,R):
 #     # ReadMe
